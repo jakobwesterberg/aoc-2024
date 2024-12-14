@@ -1,28 +1,5 @@
 import argparse
-
-memory = {}
-
-def cost(a, b, p, score, depth):
-    if depth == 100:
-        return 0
-
-    if score == p:
-        return 0
-
-    score_plus_a = 0
-
-    if (a, depth) in memory:
-        score_plus_a = memory(a, depth)
-    else:
-        score_plus_a = cost(a, b, p, (score[0] + a[0], score[1] + a[1]), depth + 1) + 3
-
-    score_plus_b = 0
-    if (b, depth) in memory:
-        score_plus_b = memory(b, depth)
-    else:
-        score_plus_b = cost(a, b, p, (score[0] + b[0], score[1] + b[1]), depth + 1) + 1
-
-    return min(score_plus_a, score_plus_b)
+import numpy as np
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -78,25 +55,28 @@ if __name__ == '__main__':
 
     cost = []
     for i in range(0, len(button_a)):
-        pos = (0, 0)
-
-        m = 0
-        n = 0
-        while m != -1:
-            while n != -1:
-
-                if m * button_a[i][0] + n * button_b[i][0] > 10000000000000 + prize[i][0] \
-                   or m * button_a[i][1] + n * button_b[i][1] > 10000000000000 + prize[i][1]:
-                    m = -1
-                    n = -1
-
+        for m in range(0, 100):
+            for n in range(0, 100):
                 if (m * button_a[i][0] + n * button_b[i][0], m * button_a[i][1] + n * button_b[i][1]) \
-                   == (10000000000000 + prize[i][0], 10000000000000 + prize[i][1]):
+                   == (prize[i][0], prize[i][1]):
                     cost.append(3 * m + n)
-                    m = -1
-                    n = -1
+    
+    print(sum(cost))
 
-                n += 1
-            m += 1
+    cost = []
+    for i in range(0, len(button_a)):
+        prize[i] = (prize[i][0] + 10000000000000, prize[i][1] + 10000000000000)
+        a = np.array([[button_a[i][0], button_b[i][0]], [button_a[i][1], button_b[i][1]]])
+        b = np.array([prize[i][0], prize[i][1]])
+        c = np.linalg.solve(a,b)
+
+        if c[0] < 0 or c[1] < 0:
+            continue
+
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if (int(c[0] + x) * button_a[i][0] + int(c[1] + y) * button_b[i][0] == prize[i][0] \
+                    and int(c[0] + x) * button_a[i][1] + int(c[1] + y) * button_b[i][1] == prize[i][1]):
+                    cost.append(3 * int(c[0] + x) + int(c[1] + y))
 
     print(sum(cost))
