@@ -1,4 +1,5 @@
 import argparse
+import math
 
 a = 0
 b = 0
@@ -72,12 +73,33 @@ def run():
     output = output[0:len(output) - 1]
     return output
 
-def score(output, program):
-    s = 0
-    for i in range(0, len(output)):
-            if output[i] == program[i]:
-                s += 1
-    return s
+def find(index, k, candidates):
+    global a
+    global b
+    global c
+    global program
+
+    for i in range(0, 7):
+        k[index] = i
+        a = 0
+        for j in range(0, len(k)):
+            a += 8**j * k[j]
+
+        candidates.append((index, a))
+        output = run()
+        output = list(map(int, output.split(',')))
+
+        a = 0
+        b = 0
+        c = 0
+
+        if len(output) == len(program) and output[index] == program[index]:
+            if index != 0 and find(index - 1, k, candidates):
+                return True
+            elif index == 0:
+                return True
+
+    return False
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -130,53 +152,31 @@ if __name__ == '__main__':
                 else:
                     i += 1
 
-    #output = run()
-    #output = list(map(int, output.split(',')))
+    output = run()
+    print(output)
 
-    #a_inital = 181484988207182
+    k = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    candidates = []
+    find(15, k, candidates)
 
-    #for i in range(0, 15):
-    #    for j in range(0, 9)
-    #a_test = "00000000000000"
+    best_candidate = (15, math.inf)
+    for candidate in candidates:
+        if candidate[0] <= best_candidate[0]:
+            if candidate[0] != best_candidate[0]:
+                best_candidate = candidate
+            elif candidate[1] < best_candidate[1]:
+                best_candidate = candidate
 
-
-
-    #a_inital = 8**0*1 + 8**1*1 + 8**2*1 + 8**3*2 + 8**4*3 + 8**5*2 \
-    #    + 8**6*0 + 8**7*6 + 8**8*6 + 8**9*9 + 8**10*1 + 8**11*7  + 8**12*1 + 8**13*1 + 8**14*1 + 8**15*6
-    #print(a_inital)
-    #a_inital = 216185278996041
-    #a_inital = 0
+    a_inital = best_candidate[1]
     b_inital = b
     c_inital = c
 
-    output = []
-    #while output != program:
-
-    a_inital = 8**0*4 + 8**1*4 + 8**2*4 + 8**3*2 + 8**4*3 + 8**5*2 \
-        + 8**6*0 + 8**7*6 + 8**8*6 + 8**9*9 + 8**10*1 + 8**11*7  + 8**12*1 + 8**13*1 + 8**14*1 + 8**15*6
-    a = a_inital
-    print(program)
-    for i in range(0, 1):
+    for i in range(0, 10000):
         a = a_inital + i
         b = b_inital
         c = c_inital
         output = run()
         output = list(map(int, output.split(',')))
-        print(output)
-
-        #if len(output) != len(program):
-        #     pass
-        #else:
-        #     print(score(output, program))
-
-#[6] 0
-#[7] 1
-#[5] 2
-#[6] 3
-#[2] 4
-#[3] 5
-#[0] 6
-#[1] 7
-# 8**0*1 + 8**1*1 + 8**2*1 + 8**3*1 + 8**4*1 + 8**5*1 + 8**6*1 + 8**7*1 + 8**8*1 + 8**9*1 + 8**10*1 + 8**11*1  + 8**12*1 + 8**13*1 + 8**14*1 + 8**15*1
-# 2,       4,       1,       3,       7,       5,       0,       3,       4,       3,        1,        5,        5,        5,        3, 0
-
+        if output == program:
+            print(a_inital + i)
+            break
