@@ -1,32 +1,9 @@
 import argparse
 import math
 
-#function Dijkstra(Graph, source):
-#
-#    for each vertex v in Graph.Vertices:
-#        dist[v] ← INFINITY
-#        prev[v] ← UNDEFINED
-#        add v to Q
-#    dist[source] ← 0
-#
-#    while Q is not empty:
-#        u ← vertex in Q with minimum dist[u]
-#        remove u from Q
-#
-#        for each neighbor v of u still in Q:
-#            alt ← dist[u] + Graph.Edges(u, v)
-#            if alt < dist[v]:
-#                dist[v] ← alt
-#                prev[v] ← u
-#
-#    return dist[], prev[]
-
-def cheat(pos, roads, walls, count, visited):
-    for dy in [-1, 0, 1]:
-        for dx in [-1, 0, 1]:
-
 def dijkstra(g, s):
     dist = {}
+    prev = {}
     q = []
 
     for v in g:
@@ -59,8 +36,36 @@ def dijkstra(g, s):
                 alt = dist[u] + 1
                 if alt < dist[v]:
                     dist[v] = alt
+                    prev[v] = u
 
-    return dist
+    return dist, prev
+
+def find_cheats(roads, start, end, ps):
+    dist_start, prev_start = dijkstra(roads, start)
+    dist_end, prev_end = dijkstra(roads, end)
+
+    base = dist_start[end]
+    cheats = {}
+
+    v = start
+    while v != end:
+        w = end
+        while v != w:
+            delta_y = abs(v[0] - w[0])
+            delta_x = abs(v[1] - w[1])
+            
+            if delta_y + delta_x <= ps:
+                delta = base - (dist_start[v] + dist_end[w] + delta_y + delta_x)
+                if delta > 0:
+                    if delta in cheats:
+                        cheats[delta] += 1
+                    else:
+                        cheats[delta] = 1
+
+            w = prev_start[w]
+        v = prev_end[v]
+
+    return cheats
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -72,16 +77,13 @@ if __name__ == '__main__':
         s = file.read()
     s = s.split('\n')
 
-    walls = []
     roads = []
     start = None
     end = None
 
     for i in range(0, len(s)):
         for j in range(0, len(s[0])):
-            if s[i][j] == '#':
-                walls.append((i, j))
-            elif s[i][j] == '.':
+            if s[i][j] == '.':
                 roads.append((i, j))
             elif s[i][j] == 'S':
                 start = (i, j)
@@ -93,82 +95,18 @@ if __name__ == '__main__':
     width = len(s[0])
     height = len(s)
 
-    dist_start = dijkstra(roads, start)
-    dist_end = dijkstra(roads, end)
-
-    base = dist_start[end]
-    count = {}
-    for i in range(0, len(s)):
-        for j in range(0, len(s[0])):
-            if (i, j) not in roads:
-                continue
-
-            for dy in [-1, 0, 1]:
-                for dx in [-1, 0, 1]:
-                    if dy and dx:
-                        continue
-                    if not dy and not dx:
-                        continue
-
-                    if (i + dy, j + dx) not in walls:
-                        continue
-
-                    for dy2 in [-1, 0, 1]:
-                        for dx2 in [-1, 0, 1]:
-                            if dy2 and dx2:
-                                continue
-                            if not dy2 and not dx2:
-                                continue
-                            if (i + dy + dy2, j + dx + dx2) == (i, j):
-                                continue
-
-                            if (i + dy + dy2, j + dx + dx2) not in roads:
-                                continue
-
-                            delta = base - (dist_start[(i, j)] + dist_end[(i + dy + dy2, j + dx + dx2)] + 2)
-                            if delta < 0:
-                                continue
-
-                            if delta in count:
-                                count[delta] += 1
-                            else:
-                                count[delta] = 1
-
-    a = 0
-    for c in count:
+    cheats = find_cheats(roads, start, end, 2)
+    count = 0
+    for c in cheats:
         if c >= 100:
-            a += count[c]
+            count += cheats[c]
 
-    print(a)
- #    for i in range(0, len(s) - 1):
- #       for j in range(0, len(s[0])):
- #           cheat1 = (i, j)
- #           cheat2 = (i + 1, j)
- #           if cheat1 not in walls:
- #               cheat1 = None
- #           if cheat2 not in walls:
- #               cheat2 = None
- #
- #           if not cheat1 and not cheat2:
- #               continue
- #
- #           if (cheat1, cheat2) in cheats or (cheat2, cheat1) in cheats:
- #               continue
- #
- #           cheats[(cheat1, cheat2)] = True
- #
- #           roads2 = roads.copy()
- #           if cheat1:
- #               roads2.append(cheat1)
- #           if cheat2:
- #               roads2.append(cheat2)
- #
- #           d = dijkstra(roads2, start)
- #           if (no_cheat_time - d[end]) in count:
- #               count[no_cheat_time - d[end]] += 1
- #           else:
- #               count[no_cheat_time - d[end]] = 1
- #
- #           if no_cheat_time - d[end] == 64:
- #               print(cheat1, cheat2)
+    print(count)
 
+    cheats = find_cheats(roads, start, end, 20)
+    count = 0
+    for c in cheats:
+        if c >= 100:
+            count += cheats[c]
+
+    print(count)
